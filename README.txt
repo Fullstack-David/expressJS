@@ -2,7 +2,7 @@
 2. npm i express
 3. npm i -D nodemon
 4. npm i express-validator
-5. 
+5.  npm i cookie-parser
 6.
 7.
 8.
