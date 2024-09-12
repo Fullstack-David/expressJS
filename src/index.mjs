@@ -5,15 +5,24 @@ import cookieParser from "cookie-parser";
 import session from "express-session";
 import createUserValidationSchema from "./utils/validationSchemas.mjs";
 import { checkSchema } from "express-validator";
-import mockUsers from "./mockUsers/mockUsers.mjs";
+import authRouter from "./routes/auth.mjs";
+import cartRouter from "./routes/cartRouter.mjs";
+import passport from "passport";
+import "./strategies/local-strategy.mjs";
+import mongoose from "mongoose";
 
 const app = express();
+
+mongoose
+  .connect("mongodb://localhost/express_js")
+  .then(() => console.log("Connected to Database"))
+  .catch((error) => console.log(`Error: ${error}`));
+
 // express parsar inte json by default så vi måste lägga till detta
 // this is a middleware och måste vara innan alla routes
 app.use(express.json());
 
-// behöver vara innan alla routes
-// signed: måse finnas en string value
+// behöver vara innan alla routes signed: måse finnas en string value
 app.use(cookieParser("Helloworld"));
 app.use(
   session({
@@ -25,8 +34,15 @@ app.use(
     },
   })
 );
+
+// Must be after session nad before routes
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use(usersRouter);
 app.use(productRouter);
+app.use(authRouter);
+app.use(cartRouter);
 
 const PORT = process.env.PORT || 3000;
 
@@ -38,42 +54,23 @@ app.get("/", checkSchema(createUserValidationSchema), (request, response) => {
   response.status(201).send({ msg: "Hello" });
 });
 
-app.post("/api/auth", (request, response) => {
-  const {
-    body: { username, password },
-  } = request;
-  const findUser = mockUsers.find((user) => user.username === username);
-  if (!findUser || findUser.password !== password)
-    return response.status(401).send({ msg: "Bad credentials" });
-
-  request.session.user = findUser;
-  return response.status(200).send(findUser);
-});
-
 app.get("/api/auth/status", (request, response) => {
-  request.sessionStore.get(request.sessionID, (error, session) => {
-    console.log(session);
+  console.log("Inside /auth/status/endpoint");
+  console.log(request.user);
+  console.log(request.session);
+  return request.user ? response.send(request.user) : response.sendStatus(401);
+});
+
+app.post("/api/auth", passport.authenticate("local"), (request, response) => {
+  response.sendStatus(200);
+});
+
+app.post("/api/auth/logout", (request, response) => {
+  if (!request.user) return response.status(401);
+  request.logout((error) => {
+    if (error) return response.sendStatus(400);
+    response.sendStatus(200);
   });
-  return request.session.user
-    ? response.status(200).send(request.session.user)
-    : response.status(401).send({ msg: "Not Authenticated" });
-});
-
-app.post("/api/cart", (request, response) => {
-  if (!request.session.user) return response.sendStatus(401);
-  const { body: item } = request;
-  const { cart } = request.session;
-  if (cart) {
-    cart.push(item);
-  } else {
-    request.session.cart = [item];
-  }
-  return response.status(201).send(item);
-});
-
-app.get("/api/cart", (request, response) => {
-  if (!request.session.user) return response.sendStatus(401);
-  return response.send(request.session.cart ?? []);
 });
 
 app.listen(PORT, () => {

@@ -1,5 +1,5 @@
 export const mockUsers = [
-  { id: 1, username: "Max", displayname: "Thunder", password: "hello125" },
+  { id: 1, username: "Max", displayname: "Thunder", password: "hello123" },
   { id: 2, username: "Lina", displayname: "Starlight", password: "passwo56" },
   { id: 3, username: "Nina", displayname: "Bright", password: "secret789" },
   { id: 4, username: "Alex", displayname: "Rocket", password: "mypass321" },
