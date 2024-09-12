@@ -26,6 +26,18 @@ export const createUserValidationSchema = {
       errorMessage: "Username must be at least 5-32 characters.",
     },
   },
+  password: {
+    isLength: {
+      options: {
+        min: 8,
+        max: 32,
+      },
+      errorMessage: "Password must be at least 8 - 32 characters.",
+    },
+    notEmpty: {
+      errorMessage: "Password must not be empty",
+    },
+  },
 };
 
 export default createUserValidationSchema;
