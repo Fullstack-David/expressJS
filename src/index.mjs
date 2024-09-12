@@ -8,7 +8,8 @@ import { checkSchema } from "express-validator";
 import authRouter from "./routes/auth.mjs";
 import cartRouter from "./routes/cartRouter.mjs";
 import passport from "passport";
-import "./strategies/local-strategy.mjs";
+// import "./strategies/local-strategy.mjs";
+import "./strategies/local-strategy copy.mjs";
 import mongoose from "mongoose";
 
 const app = express();
@@ -38,7 +39,6 @@ app.use(
 // Must be after session nad before routes
 app.use(passport.initialize());
 app.use(passport.session());
-
 app.use(usersRouter);
 app.use(productRouter);
 app.use(authRouter);
@@ -78,3 +78,5 @@ app.listen(PORT, () => {
     `App is running at port ${PORT} =>   http://localhost:3000/api/users`
   );
 });
+
+// mongodb+srv://<db_username>:<db_password>@superheroes.bydwz4d.mongodb.net/

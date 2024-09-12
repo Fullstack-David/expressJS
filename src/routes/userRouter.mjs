@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, request, response } from "express";
 import {
   query,
   validationResult,
@@ -8,6 +8,8 @@ import {
 import mockUsers from "../mockUsers/mockUsers.mjs";
 import resolveIndexByUserId from "../middleware/middleware.mjs";
 import createUserValidationSchema from "../utils/validationSchemas.mjs";
+import { User } from "../mongoose/schemas/userSchema.mjs";
+import { hashPassword } from "../utils/helpers.mjs";
 
 const router = Router();
 
@@ -50,21 +52,47 @@ router.get("/api/users/:id", resolveIndexByUserId, (request, response) => {
   return response.send(findUser);
 });
 
+//* checkSchema och validation router
+// router.post(
+//   "/api/users",
+//   checkSchema(createUserValidationSchema),
+//   (request, response) => {
+//     const result = validationResult(request);
+//     console.log(result);
+
+//     if (!result.isEmpty())
+//       return response.status(400).send({ error: result.array() });
+
+//     const data = matchedData(request);
+//     console.log(data);
+//     const newUser = { id: mockUsers[mockUsers.length - 1].id + 1, ...data };
+//     mockUsers.push(newUser);
+//     return response.status(201).send(newUser);
+//   }
+// );
+
+//* connectting to mongodb-database
 router.post(
   "/api/users",
   checkSchema(createUserValidationSchema),
-  (request, response) => {
+  async (request, response) => {
     const result = validationResult(request);
-    console.log(result);
-
-    if (!result.isEmpty())
-      return response.status(400).send({ error: result.array() });
-
+    if (!result.isEmpty()) return response.status(400).send(result.array());
     const data = matchedData(request);
     console.log(data);
-    const newUser = { id: mockUsers[mockUsers.length - 1].id + 1, ...data };
-    mockUsers.push(newUser);
-    return response.status(201).send(newUser);
+
+    data.password = hashPassword(data.password);
+    console.log(data);
+
+    const newUser = new User(data);
+
+    try {
+      const savedUser = await newUser.save();
+      return response.status(201).send(savedUser);
+    } catch (error) {
+      console.log(`Error: ${error}`);
+      return response.status(400).send("Bad Request");
+    }
   }
 );
 

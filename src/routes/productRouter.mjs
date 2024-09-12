@@ -6,6 +6,7 @@ import {
   checkSchema,
   validationResult,
 } from "express-validator";
+import { Product } from "../mongoose/schemas/productSchema.mjs";
 
 const router = Router();
 
