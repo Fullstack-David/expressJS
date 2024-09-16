@@ -1,4 +1,4 @@
-import express, { request, response } from "express";
+import express from "express";
 import usersRouter from "./routes/userRouter.mjs";
 import productRouter from "./routes/productRouter.mjs";
 import cookieParser from "cookie-parser";
@@ -8,10 +8,14 @@ import { checkSchema } from "express-validator";
 import authRouter from "./routes/auth.mjs";
 import cartRouter from "./routes/cartRouter.mjs";
 import passport from "passport";
-// import "./strategies/local-strategy.mjs";
-import "./strategies/local-strategy copy.mjs";
+import "./strategies/local-strategy.mjs";
+// import "./strategies/local-strategy copy.mjs";
 import mongoose from "mongoose";
+import MongoStore from "connect-mongo";
+import "./strategies/discord-strategy.mjs";
+import dotenv from "dotenv";
 
+dotenv.config();
 const app = express();
 
 mongoose
@@ -33,6 +37,10 @@ app.use(
     cookie: {
       maxAge: 60000 * 60,
     },
+    // save data in sessionStore
+    store: MongoStore.create({
+      client: mongoose.connection.getClient(),
+    }),
   })
 );
 
@@ -73,6 +81,25 @@ app.post("/api/auth/logout", (request, response) => {
   });
 });
 
+// app.get("/api/auth/discord", passport.authenticate("discord"));
+
+// när du går in i denna länk första gången så funkar den
+// Andra gången måste du tabort cookies för att det ska funka
+app.get(
+  "/api/auth/discord",
+  passport.authenticate("discord", { session: false })
+);
+
+app.get(
+  "/api/auth/discord/redirect",
+  passport.authenticate("discord"),
+  (request, response) => {
+    console.log(request.session);
+    console.log(request.user);
+    response.sendStatus(200);
+  }
+);
+
 app.listen(PORT, () => {
   console.log(
     `App is running at port ${PORT} =>   http://localhost:3000/api/users`
@@ -80,3 +107,11 @@ app.listen(PORT, () => {
 });
 
 // mongodb+srv://<db_username>:<db_password>@superheroes.bydwz4d.mongodb.net/
+
+// client-secret =  E7WaW-xWd2GJtkyG9FoG9qPRfSlO0e-S
+// client_id = 1284043293453193246
+
+// http://localhost:3000/api/auth/discord/redirect
+
+// generated URL to discord
+// https://discord.com/oauth2/authorize?client_id=1284043293453193246&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fapi%2Fauth%2Fdiscord%2Fredirect&scope=identify

@@ -1,6 +1,5 @@
-import { Router, request, response } from "express";
+import { Router } from "express";
 import router from "./userRouter.mjs";
-import passport from "passport";
 import mockUsers from "../mockUsers/mockUsers.mjs";
 import "../strategies/local-strategy.mjs";
 
